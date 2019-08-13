@@ -175,8 +175,32 @@ class MarkdownExtraOverride extends MarkdownExtra_Parser {
 		# trim leading newlines and trailing newlines
 		$codeblock = preg_replace('/\A\n+|\n+\z/', '', $codeblock);
 
-		$codeblock = "<code><pre>$codeblock\n</pre></code>";
+//		$codeblock = "<code><pre>$codeblock\n</pre></code>";
+		$codeblock = "<source>$codeblock\n</source>";
 		return "\n\n".$this->hashBlock($codeblock)."\n\n";
 	} // End function _doCodeBlocks_callback
+
+  function _doFencedCodeBlocks_callback($matches) {
+    $classname =& $matches[2];
+    $attrs     =& $matches[3];
+    $codeblock = $matches[4];
+    $codeblock = htmlspecialchars($codeblock, ENT_NOQUOTES);
+    $codeblock = preg_replace_callback('/^\n+/',
+      array(&$this, '_doFencedCodeBlocks_newlines'), $codeblock);
+
+    if ($classname != "") {
+      if ($classname{0} == '.')
+        $classname = substr($classname, 1);
+      $attr_str = ' lang="'.$this->code_class_prefix.$classname.'"';
+    } else {
+      $attr_str = $this->doExtraAttributes($this->code_attr_on_pre ? "pre" : "code", $attrs);
+    }
+    $pre_attr_str  = $this->code_attr_on_pre ? $attr_str : '';
+    $code_attr_str = $this->code_attr_on_pre ? '' : $attr_str;
+    $codeblock  = "<source$code_attr_str>$codeblock</source>";
+
+    return "\n\n".$this->hashBlock($codeblock)."\n\n";
+  }
+
 
 } // End class MarkdownExtraOverride
